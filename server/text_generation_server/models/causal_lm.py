@@ -501,6 +501,7 @@ class CausalLM(Model):
             truncation_side="left",
             trust_remote_code=trust_remote_code,
         )
+        '''
         model = AutoModelForCausalLM.from_pretrained(
             model_id,
             revision=revision,
@@ -511,9 +512,16 @@ class CausalLM(Model):
             load_in_8bit=quantize == "bitsandbytes",
             trust_remote_code=trust_remote_code,
         )
+        '''
+        from awq import AutoAWQForCausalLM
+        quant_path = model_id
+        quant_file = "awq_model_w4_g128.pt"
+        # quant_file = "model.safetensors"
+        model = AutoAWQForCausalLM.from_quantized(quant_path, quant_file)
+
         if torch.cuda.is_available() and torch.cuda.device_count() == 1:
             model = model.cuda()
-
+        '''
         if tokenizer.pad_token_id is None:
             if model.config.pad_token_id is not None:
                 tokenizer.pad_token_id = model.config.pad_token_id
@@ -523,7 +531,8 @@ class CausalLM(Model):
                 tokenizer.pad_token_id = tokenizer.eos_token_id
             else:
                 tokenizer.add_special_tokens({"pad_token": "[PAD]"})
-
+        '''
+        tokenizer.pad_token = tokenizer.unk_token
         super(CausalLM, self).__init__(
             model=model,
             tokenizer=tokenizer,
