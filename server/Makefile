@@ -20,7 +20,7 @@ install-torch:
 
 install: gen-server install-torch
 	pip install pip --upgrade
-	pip install -r requirements.txt
+	pip install -r requirements.txt -i https://mirrors.aliyun.com/pypi/simple/
 	pip install -e ".[bnb, accelerate]"
 
 run-dev:
