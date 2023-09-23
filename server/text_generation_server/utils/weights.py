@@ -210,7 +210,7 @@ class Weights:
         elif quantize == "awq":
             try:
                 qweight = torch.cat(
-                    [self.get_sharded(f"{p}.qweight", dim=1) for p in prefixes], dim=1
+                    [self.get_sharded(f"{p}.qweight", dim=0) for p in prefixes], dim=0
                 )
             except RuntimeError:
                 raise RuntimeError(
@@ -218,10 +218,10 @@ class Weights:
                 )
 
             qzeros = torch.cat(
-                [self.get_sharded(f"{p}.qzeros", dim=1) for p in prefixes], dim=1
+                [self.get_sharded(f"{p}.qzeros", dim=0) for p in prefixes], dim=0
             )
             scales = torch.cat(
-                [self.get_sharded(f"{p}.scales", dim=1) for p in prefixes], dim=1
+                [self.get_sharded(f"{p}.scales", dim=0) for p in prefixes], dim=0
             )
 
             bits, groupsize = self._get_awq_params()
@@ -318,14 +318,14 @@ class Weights:
             bits, groupsize = self._get_awq_params()
 
             try:
-                qweight = self.get_sharded(f"{prefix}.qweight", dim=0)
+                qweight = self.get_sharded(f"{prefix}.qweight", dim=1)
             except RuntimeError:
                 raise RuntimeError(
                     "Cannot load `awq` weight, make sure the model is already quantized"
                 )
 
-            qzeros = self.get_sharded(f"{prefix}.qzeros", dim=0)
-            scales = self.get_sharded(f"{prefix}.scales", dim=0)
+            qzeros = self.get_sharded(f"{prefix}.qzeros", dim=1)
+            scales = self.get_sharded(f"{prefix}.scales", dim=1)
             
             weight = (qweight, qzeros, scales, bits, groupsize)
         else:

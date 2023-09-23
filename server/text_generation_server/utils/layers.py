@@ -256,8 +256,8 @@ def get_linear(weight, bias, quantize):
             raise NotImplementedError(
                 f"The passed weight is not `awq` compatible, loader needs to be updated."
             )
-        in_features = qweight.shape[0]
-        out_features = qweight.shape[1] * 32 // bits
+        in_features = qweight.shape[1] * 32 // bits
+        out_features = qweight.shape[0]
         linear = WQLinear(w_bit=bits, group_size=groupsize, in_features=in_features, out_features=out_features, bias=bias is not None, dev=qweight.device)
         linear.qweight = qweight
         linear.qzeros = qzeros
