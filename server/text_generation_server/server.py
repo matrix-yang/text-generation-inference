@@ -1,5 +1,6 @@
-import asyncio
 import os
+os.environ["NCCL_ALGO"]="Tree" # optimization for PT2.0.1 + 4090*2
+import asyncio
 import torch
 
 from grpc import aio
