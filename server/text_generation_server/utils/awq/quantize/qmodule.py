@@ -4,6 +4,7 @@ import math
 import torch
 import torch.nn as nn
 import awq_inference_engine  # with CUDA kernels
+from text_generation_server.utils.awq.quantize import awq_kernel_tuner
 
 
 class ScaledActivation(nn.Module):
@@ -38,6 +39,8 @@ class WQLinear(nn.Module):
             self.register_buffer('bias', torch.zeros((out_features), dtype=torch.float16, device=dev))
         else:
             self.bias = None
+        self.get_best_k_fn = awq_kernel_tuner.get_strategy(self.in_features, self.out_features)
+        assert self.get_best_k_fn is not None
 
     @classmethod
     def from_linear(cls, linear, w_bit, group_size, init_only=False, scales=None, zeros=None):
@@ -91,7 +94,8 @@ class WQLinear(nn.Module):
     @torch.no_grad()
     def forward(self, x):
         out_shape = x.shape[:-1] + (self.out_features, )
-        out = awq_inference_engine.gemm_forward_cuda(x.reshape(-1, x.shape[-1]), self.qweight, self.scales, self.qzeros, 8)
+        best_split_k_iter = self.get_best_k_fn(x.shape[0])
+        out = awq_inference_engine.gemm_forward_cuda(x.reshape(-1, x.shape[-1]), self.qweight, self.scales, self.qzeros, best_split_k_iter)
         out = out + self.bias if self.bias is not None else out
         return out.reshape(out_shape)
     
